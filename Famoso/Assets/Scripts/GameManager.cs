@@ -1,0 +1,69 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class GameManager : MonoBehaviour
+{
+    [Header("Colecciones")]
+    public Transform[] playerPositions;
+    public GameObject[] rooms;
+    public GameObject[] rooms_PaintableObjects;
+
+    [Header("Referencias")]
+    [SerializeField] Doors_Controller doors_controller;
+    [SerializeField] Dialogs_Controller dialogs_controller;
+    [SerializeField] scenes_progression scenes_Progression;
+    [SerializeField] CharacterController characterController;
+    [SerializeField] Transform player;
+    [SerializeField] AudioSource audioSource_Click;
+
+    public string nombreEscena = "MainMenu";
+    bool gameEnded = false;
+    int roomIndex = 0;
+    private void Start()
+    {
+        doors_controller.paintableObjects = rooms_PaintableObjects[roomIndex];
+        player.position = playerPositions[roomIndex].position;
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        dialogs_controller.changeDialogsSet(roomIndex);
+    }
+
+    public void changeRoom()
+    {
+        if (gameEnded) return;
+
+        roomIndex++;
+
+        if (roomIndex < rooms.Length)
+        {
+            doors_controller.paintableObjects = rooms_PaintableObjects[roomIndex];
+
+            rooms[roomIndex - 1].SetActive(false);
+            rooms[roomIndex].SetActive(true);
+
+            if (characterController != null) characterController.enabled = false;
+
+            player.position = playerPositions[roomIndex].position;
+
+            if (characterController != null) characterController.enabled = true;
+
+            dialogs_controller.changeDialogsSet(roomIndex);
+        }
+        else
+        {
+            gameEnded = true;
+
+            UI_Controller.gameCompleted = true;
+            scenes_Progression.triggerHideWorld();
+        }
+    }
+    public void Jugar()
+    {
+        audioSource_Click.Play();
+        SceneManager.LoadScene(nombreEscena);
+    }
+}

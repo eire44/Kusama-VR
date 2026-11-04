@@ -1,0 +1,73 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+public class DragTexture : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    Image image;
+    [HideInInspector] public Transform parentAfterDrag;
+    RectTransform rectTransform;
+    Vector2 originalSize;
+    Vector3 originalScale;
+    [HideInInspector] public bool dropped = false;
+    Vector3 originalPosition;
+
+    void Awake()
+    {
+        image = GetComponent<Image>();
+        rectTransform = GetComponent<RectTransform>();
+
+        originalSize = rectTransform.sizeDelta;
+        originalScale = rectTransform.localScale;
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        parentAfterDrag = transform.parent;
+        originalPosition = transform.position;
+        originalSize = rectTransform.sizeDelta;
+        originalScale = rectTransform.localScale;
+
+        dropped = false;
+
+        transform.SetParent(transform.root);
+        transform.SetAsLastSibling();
+
+        image.raycastTarget = false;
+
+        foreach (var graphic in GetComponentsInChildren<Graphic>())
+        {
+            graphic.raycastTarget = false;
+        }
+
+        rectTransform.sizeDelta = originalSize;
+        rectTransform.localScale = originalScale;
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        rectTransform.position = eventData.position;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (!dropped)
+        {
+            transform.SetParent(parentAfterDrag);
+
+            rectTransform.position = originalPosition;
+
+            rectTransform.sizeDelta = originalSize;
+            rectTransform.localScale = originalScale;
+        }
+
+        image.raycastTarget = true;
+
+        foreach (var graphic in GetComponentsInChildren<Graphic>())
+        {
+            graphic.raycastTarget = true;
+        }
+    }
+}
